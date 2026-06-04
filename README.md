@@ -3,12 +3,15 @@
 [![Deploy](https://github.com/jabahm/velibmap/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/jabahm/velibmap/actions/workflows/deploy-pages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Démo](https://img.shields.io/badge/d%C3%A9mo-jabahm.github.io%2Fvelibmap-22c55e)](https://jabahm.github.io/velibmap/)
+[![data.gouv.fr](https://img.shields.io/badge/data.gouv.fr-r%C3%A9utilisation-29304f)](https://www.data.gouv.fr/reuses/velibmap-disponibilite-velib-metropole-en-temps-reel)
 
 Carte web open source qui visualise en temps réel la disponibilité des stations **Vélib' Métropole** (vélos mécaniques, vélos électriques, bornettes libres), partout à Paris et en Île-de-France.
 
 Sans clé d'API, sans tracker, 100 % statique. Construit avec [mapcn](https://github.com/AnmolSaini16/mapcn) (MapLibre GL + shadcn) au-dessus du dataset [Vélib' Vélos et bornes Disponibilité temps réel](https://www.data.gouv.fr/datasets/velib-velos-et-bornes-disponibilite-temps-reel/) (Opendata Paris).
 
 > **Démo en ligne :** https://jabahm.github.io/velibmap/
+>
+> **Réutilisation data.gouv.fr :** https://www.data.gouv.fr/reuses/velibmap-disponibilite-velib-metropole-en-temps-reel
 
 ![Démo de VélibMap](docs/demo.gif)
 
