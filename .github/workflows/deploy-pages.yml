@@ -39,6 +39,9 @@ jobs:
         run: pnpm build
 
       - uses: actions/configure-pages@v5
+        with:
+          # Auto-creates the Pages site on first run so no manual click in Settings.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
