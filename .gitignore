@@ -15,6 +15,9 @@ dist-ssr
 # Claude Code local config
 .claude
 
+# Private notes kept locally only
+DATAGOUV.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

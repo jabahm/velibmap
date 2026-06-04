@@ -24,9 +24,9 @@ const { GIFEncoder, quantize, applyPalette } = gifenc
 const URL = process.env.URL ?? 'http://localhost:5173/'
 const OUT = process.env.OUT ?? 'docs/demo.gif'
 
-const VIEWPORT = { width: 720, height: 480 }
+const VIEWPORT = { width: 1280, height: 800 }
 const FRAME_DELAY_MS = 200 // 5 fps
-const GIF_COLORS = 96
+const GIF_COLORS = 64
 
 function findChromium() {
   const cache = join(homedir(), 'Library', 'Caches', 'ms-playwright')
