@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "screenshot": "node scripts/screenshot.mjs"
+    "screenshot": "node scripts/screenshot.mjs",
+    "screenshot:gif": "node scripts/screenshot-gif.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",

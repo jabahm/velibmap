@@ -17,7 +17,7 @@ Ce document contient tout le contenu prêt à coller pour publier VélibMap comm
 
 ### Titre
 ```
-VélibMap — disponibilité Vélib' Métropole en temps réel
+VélibMap : disponibilité Vélib' Métropole en temps réel
 ```
 
 ### Description (markdown accepté)
@@ -67,7 +67,7 @@ velib, mobilite, paris, transport, temps-reel, carte, opensource, react, maplibr
 ```
 
 ### Datasets liés
-- **Vélib' - Vélos et bornes - Disponibilité temps réel** — slug `velib-velos-et-bornes-disponibilite-temps-reel`
+- **Vélib' Vélos et bornes Disponibilité temps réel**, slug `velib-velos-et-bornes-disponibilite-temps-reel`
 
 ## 3. Générer la vignette (thumbnail)
 
