@@ -14,7 +14,9 @@ import { ExplorerTab, type Need } from '@/components/ExplorerTab'
 import { LegendBadge } from '@/components/LegendBadge'
 import { MapViewControls, type Theme, type ViewMode } from '@/components/MapViewControls'
 import { BuildingsLayer } from '@/components/BuildingsLayer'
+import { MobileSheet } from '@/components/MobileSheet'
 import { useStations } from '@/hooks/useStations'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import type { AddressHit } from '@/lib/geocode'
 import { fetchFootRoute, type FootRoute } from '@/lib/osrm'
 import { isOperational } from '@/lib/velib'
@@ -32,6 +34,7 @@ function needToColorMode(need: Need): ColorMode {
 export default function App() {
   const { stations, loading, error, lastUpdated } = useStations()
   const mapRef = useRef<MapRef>(null)
+  const isMobile = useMediaQuery('(max-width: 767px)')
 
   const [address, setAddress] = useState<AddressHit | null>(null)
   const [need, setNeed] = useState<Need>('mechanical')
@@ -115,14 +118,19 @@ export default function App() {
       if (lat < minLat) minLat = lat
       if (lat > maxLat) maxLat = lat
     }
+    // On desktop the left sidebar eats 320px; on mobile the sheet is at the
+    // bottom so we pad below instead of left.
+    const padding = isMobile
+      ? { top: 60, right: 40, bottom: 240, left: 40 }
+      : { top: 80, right: 80, bottom: 80, left: 320 }
     mapRef.current.fitBounds(
       [
         [minLon, minLat],
         [maxLon, maxLat],
       ],
-      { padding: { top: 80, right: 80, bottom: 80, left: 320 }, duration: 700, maxZoom: 17 },
+      { padding, duration: 700, maxZoom: 17 },
     )
-  }, [route])
+  }, [route, isMobile])
 
   const [now, setNow] = useState(() => performance.timeOrigin + performance.now())
   useEffect(() => {
@@ -132,8 +140,26 @@ export default function App() {
 
   const handleStationPick = (s: Station) => {
     setSelectedCode(s.code)
-    mapRef.current?.flyTo({ center: [s.lon, s.lat], zoom: 16, duration: 600 })
+    mapRef.current?.flyTo({
+      center: [s.lon, s.lat],
+      zoom: 16,
+      duration: 600,
+      offset: isMobile ? [0, -120] : [0, 0],
+    })
   }
+
+  const panelContent = (
+    <PanelContent
+      isMobile={isMobile}
+      stationCount={stations.length}
+      stations={stations}
+      address={address}
+      need={need}
+      onAddressChange={setAddress}
+      onNeedChange={setNeed}
+      onStationPick={handleStationPick}
+    />
+  )
 
   return (
     <div className="relative h-full w-full">
@@ -146,7 +172,13 @@ export default function App() {
         projection={projection}
         loading={loading && stations.length === 0}
       >
-        <MapControls position="bottom-right" showLocate showFullscreen showCompass />
+        <MapControls
+          position="bottom-right"
+          showLocate
+          showFullscreen
+          showCompass
+          className={isMobile ? 'bottom-48! right-2!' : undefined}
+        />
         <BuildingsLayer enabled={view !== 'flat'} />
         <StationsLayer
           stations={visibleStations}
@@ -185,28 +217,13 @@ export default function App() {
         )}
       </Map>
 
-      <aside className="absolute left-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 max-w-[calc(100vw-1.5rem)] flex-col rounded-xl border bg-background/95 shadow-xl backdrop-blur">
-        <header className="flex items-center justify-between border-b px-3 py-2">
-          <div className="flex items-center gap-1.5">
-            <Bike className="size-4 text-primary" />
-            <h1 className="text-sm font-semibold">VélibMap</h1>
-          </div>
-          <span className="text-[10px] text-muted-foreground">
-            {stations.length.toLocaleString('fr-FR')} stations
-          </span>
-        </header>
-
-        <div className="flex-1 overflow-auto px-3 py-3">
-          <ExplorerTab
-            stations={stations}
-            address={address}
-            need={need}
-            onAddressChange={setAddress}
-            onNeedChange={setNeed}
-            onStationPick={handleStationPick}
-          />
-        </div>
-      </aside>
+      {isMobile ? (
+        <MobileSheet>{panelContent}</MobileSheet>
+      ) : (
+        <aside className="absolute left-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 max-w-[calc(100vw-1.5rem)] flex-col rounded-xl border bg-background/95 shadow-xl backdrop-blur">
+          {panelContent}
+        </aside>
+      )}
 
       <MapViewControls
         theme={theme}
@@ -215,8 +232,53 @@ export default function App() {
         onViewChange={setView}
       />
 
-      <LegendBadge lastUpdated={lastUpdated} error={error} now={now} />
+      {!isMobile && <LegendBadge lastUpdated={lastUpdated} error={error} now={now} />}
     </div>
+  )
+}
+
+function PanelContent({
+  isMobile,
+  stationCount,
+  stations,
+  address,
+  need,
+  onAddressChange,
+  onNeedChange,
+  onStationPick,
+}: {
+  isMobile: boolean
+  stationCount: number
+  stations: Station[]
+  address: AddressHit | null
+  need: Need
+  onAddressChange: (h: AddressHit | null) => void
+  onNeedChange: (n: Need) => void
+  onStationPick: (s: Station) => void
+}) {
+  return (
+    <>
+      <header className={cn('flex items-center justify-between', isMobile ? 'pb-2' : 'border-b px-3 py-2')}>
+        <div className="flex items-center gap-1.5">
+          <Bike className="size-4 text-primary" />
+          <h1 className="text-sm font-semibold">VélibMap</h1>
+        </div>
+        <span className="text-[10px] text-muted-foreground">
+          {stationCount.toLocaleString('fr-FR')} stations
+        </span>
+      </header>
+
+      <div className={cn(isMobile ? 'pb-2' : 'flex-1 overflow-auto px-3 py-3')}>
+        <ExplorerTab
+          stations={stations}
+          address={address}
+          need={need}
+          onAddressChange={onAddressChange}
+          onNeedChange={onNeedChange}
+          onStationPick={onStationPick}
+        />
+      </div>
+    </>
   )
 }
 
