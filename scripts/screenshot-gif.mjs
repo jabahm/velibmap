@@ -6,23 +6,27 @@
 //   pnpm add -D pngjs gifenc   (one-time)
 //   pnpm screenshot:gif
 //
-// Pure JS pipeline (no ffmpeg). Encoded with gifenc + 256-color palette.
+// Capture strategy: we pre-setup the app state silently (type address, pick
+// the closest station, popup open) BEFORE starting to record. The GIF then
+// only contains the interesting bit: pitch toggle, "Aller à cette station"
+// click, and the OSRM walking route rendering. Slower delay (200 ms / 5 fps)
+// makes each step easy to read while keeping the file small.
 
 import { chromium } from 'playwright'
 import { PNG } from 'pngjs'
 import gifenc from 'gifenc'
-const { GIFEncoder, quantize, applyPalette } = gifenc
 import { writeFileSync, existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
+const { GIFEncoder, quantize, applyPalette } = gifenc
+
 const URL = process.env.URL ?? 'http://localhost:5173/'
 const OUT = process.env.OUT ?? 'docs/demo.gif'
 
-const VIEWPORT = { width: 800, height: 540 }
-const FRAME_DELAY_MS = 160 // ~6 fps after 2x downsample
+const VIEWPORT = { width: 720, height: 480 }
+const FRAME_DELAY_MS = 200 // 5 fps
 const GIF_COLORS = 96
-const FRAME_STRIDE = 2 // keep every Nth captured frame in the final GIF
 
 function findChromium() {
   const cache = join(homedir(), 'Library', 'Caches', 'ms-playwright')
@@ -65,8 +69,7 @@ async function snap() {
   const buf = await page.screenshot({ type: 'png' })
   frames.push(buf)
 }
-
-async function captureFor(ms, fps = 10) {
+async function captureFor(ms, fps = 5) {
   const interval = Math.round(1000 / fps)
   const start = Number(process.hrtime.bigint() / 1_000_000n)
   while (Number(process.hrtime.bigint() / 1_000_000n) - start < ms) {
@@ -75,57 +78,57 @@ async function captureFor(ms, fps = 10) {
   }
 }
 
-console.log('1. initial load')
+console.log('pre-setup (silent): load app')
 await page.goto(URL, { waitUntil: 'networkidle' })
 await page.waitForTimeout(3500)
-await snap()
-await snap()
 
-console.log('2. switch to pitched view')
-await page.click('button[aria-label="Pitch"]')
-await captureFor(1400)
-
-console.log('3. type address')
+console.log('pre-setup (silent): fill address')
 const input = page.locator('input[placeholder*="Adresse"]').first()
 await input.click()
-for (const ch of '10 rue de Rivoli') {
-  await input.press('End')
-  await input.pressSequentially(ch, { delay: 0 })
-  await snap()
-}
+await input.pressSequentially('10 rue de Rivoli', { delay: 10 })
 await page.waitForTimeout(1300)
-await snap()
 
-console.log('4. pick first suggestion')
+console.log('pre-setup (silent): pick suggestion')
 await page.evaluate(() => {
   const btn = document.querySelector('aside ul[class*="absolute"] li button')
   btn?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }))
 })
-await captureFor(1600)
+await page.waitForTimeout(1500)
 
-console.log('5. click first nearby station')
-const first = page.locator('aside li button').first()
-await first.click()
-await captureFor(900)
+console.log('pre-setup (silent): click nearest station to open popup')
+await page.locator('aside li button').first().click()
+await page.waitForTimeout(1100)
 
-console.log('6. click "Aller à cette station"')
-const goBtn = await page.waitForSelector('button:has-text("Aller à cette station")', { timeout: 5000 }).catch(() => null)
+console.log('--- START CAPTURE ---')
+console.log('1. hold initial popup state')
+await snap()
+await snap()
+await snap()
+await snap()
+
+console.log('2. toggle pitched 3D view')
+await page.click('button[aria-label="Pitch"]')
+await captureFor(1800, 5)
+
+console.log('3. click "Aller à cette station"')
+const goBtn = await page
+  .waitForSelector('button:has-text("Aller à cette station")', { timeout: 5000 })
+  .catch(() => null)
 if (goBtn) {
   await goBtn.click()
-  await captureFor(3500)
-} else {
-  console.warn('go button not found; capturing extra time anyway')
-  await captureFor(2000)
+  await captureFor(3800, 5)
 }
 
+console.log('4. hold final route state')
+await snap()
+await snap()
+await snap()
+await snap()
+
 await browser.close()
+console.log(`captured ${frames.length} frames; encoding GIF…`)
 
-// Drop every Nth frame to halve the GIF size at the cost of frame rate.
-const kept = frames.filter((_, i) => i % FRAME_STRIDE === 0)
-console.log(`captured ${frames.length} frames; keeping ${kept.length}; encoding GIF…`)
-
-// Decode all frames up front so we can build a single global palette.
-const decoded = kept.map((buf) => PNG.sync.read(buf))
+const decoded = frames.map((buf) => PNG.sync.read(buf))
 const { width, height } = decoded[0]
 const concat = Buffer.concat(decoded.map((d) => d.data))
 const palette = quantize(concat, GIF_COLORS)
@@ -133,8 +136,6 @@ const palette = quantize(concat, GIF_COLORS)
 const gif = GIFEncoder()
 for (let i = 0; i < decoded.length; i++) {
   const index = applyPalette(decoded[i].data, palette)
-  // Only pass the palette on the first frame — gifenc writes it as the global
-  // color table and subsequent frames reuse it (much smaller output).
   gif.writeFrame(index, width, height, {
     palette: i === 0 ? palette : undefined,
     delay: FRAME_DELAY_MS,
