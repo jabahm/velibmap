@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MapPin, X, Loader2 } from 'lucide-react'
 import { searchAddress, type AddressHit } from '@/lib/geocode'
+import { useSheet } from '@/components/MobileSheet'
 
 type Props = {
   value: AddressHit | null
@@ -14,6 +15,7 @@ export function AddressInput({ value, onChange, placeholder }: Props) {
   const [hits, setHits] = useState<AddressHit[]>([])
   const [loading, setLoading] = useState(false)
   const acRef = useRef<AbortController | null>(null)
+  const sheet = useSheet()
 
   useEffect(() => {
     if (acRef.current) acRef.current.abort()
@@ -47,7 +49,10 @@ export function AddressInput({ value, onChange, placeholder }: Props) {
           type="text"
           value={value ? value.label : q}
           placeholder={placeholder ?? 'Adresse, place, monument…'}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true)
+            sheet.expand('half')
+          }}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onChange={(e) => {
             if (value) onChange(null)

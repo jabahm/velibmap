@@ -9,6 +9,7 @@ import {
   type StationWithDist,
 } from '@/lib/velib'
 import { AddressInput } from '@/components/AddressInput'
+import { useSheet } from '@/components/MobileSheet'
 import { cn } from '@/lib/utils'
 
 export type Need = 'mechanical' | 'ebike' | 'dock'
@@ -64,10 +65,18 @@ export function ExplorerTab({
   const [locating, setLocating] = useState(false)
   const [locateError, setLocateError] = useState<string | null>(null)
 
+  const sheet = useSheet()
   const nearest: StationWithDist[] = useMemo(() => {
     if (!address) return []
     return nearestStations(stations, address, predicateFor(need), NEAREST_N)
   }, [stations, address, need])
+
+  // On mobile: tapping a station in the list should collapse the sheet so the
+  // map + popup are visible. No-op on desktop.
+  const handlePick = (s: Station) => {
+    sheet.collapse()
+    onStationPick(s)
+  }
 
   const handleLocate = () => {
     setLocateError(null)
@@ -171,7 +180,7 @@ export function ExplorerTab({
                   <li key={s.code}>
                     <button
                       type="button"
-                      onClick={() => onStationPick(s)}
+                      onClick={() => handlePick(s)}
                       className="group flex w-full items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-left text-xs hover:bg-accent"
                     >
                       <span className={cn('size-2 shrink-0 rounded-full ring-2 ring-white', dotForCount(count))} />
