@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Démo](https://img.shields.io/badge/d%C3%A9mo-jabahm.github.io%2Fvelibmap-22c55e)](https://jabahm.github.io/velibmap/)
 
-Carte web open source qui visualise en temps réel la disponibilité des stations **Vélib' Métropole** — vélos mécaniques, vélos électriques, bornettes libres — partout à Paris et en Île-de-France.
+Carte web open source qui visualise en temps réel la disponibilité des stations **Vélib' Métropole** — vélos mécaniques, vélos électriques, bornettes libres, partout à Paris et en Île-de-France.
 
 Sans clé d'API, sans tracker, 100 % statique. Construit avec [mapcn](https://github.com/AnmolSaini16/mapcn) (MapLibre GL + shadcn) au-dessus du dataset [Vélib' - Vélos et bornes - Disponibilité temps réel](https://www.data.gouv.fr/datasets/velib-velos-et-bornes-disponibilite-temps-reel/) (Opendata Paris).
 
@@ -22,7 +22,7 @@ Sans clé d'API, sans tracker, 100 % statique. Construit avec [mapcn](https://gi
 - **Détail station** : opérateur, dispo méca/élec/bornettes, capacité, fraîcheur du flux, alertes en cas d'avarie (emprunt/retour fermé)
 - **3 modes d'affichage** : 2D plat, 2D incliné (pitch 55°) avec **extrusion 3D des bâtiments OSM**, ou globe 3D — toggle dans la barre des contrôles
 - **Thème clair / sombre**, persisté en localStorage, suit la préférence système au premier chargement
-- Déployable n'importe où en statique (GitHub Pages livré)
+
 
 ## Stack
 
@@ -43,7 +43,7 @@ pnpm install
 pnpm dev
 ```
 
-Ouvre http://localhost:5173.
+
 
 ## Build & déploiement
 
@@ -51,14 +51,6 @@ Ouvre http://localhost:5173.
 pnpm build      # bundle production dans dist/
 pnpm preview    # sert dist/ localement
 ```
-
-Un workflow GitHub Actions ([`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)) construit et déploie automatiquement sur **GitHub Pages** à chaque push sur `main`. Pour l'activer :
-
-1. Pousse le repo sur GitHub.
-2. Dans **Settings → Pages**, sélectionne « GitHub Actions » comme source.
-3. Re-déclenche le workflow (push ou « Run workflow »).
-
-Le workflow définit `VITE_BASE_PATH=/<nom-du-repo>/` automatiquement, donc rien à hardcoder.
 
 ## Données
 
@@ -81,19 +73,11 @@ Optionnel — variables d'environnement Vite :
 | `VITE_BASE_PATH` | `/` | Préfixe d'URL pour le bundle (utilisé par le workflow Pages) |
 | `VITE_OSRM_URL` | `https://router.project-osrm.org` | Endpoint OSRM. Pour la production, self-host ([osrm-backend](https://github.com/Project-OSRM/osrm-backend)) — le serveur démo n'est pas garanti pour du trafic. |
 
-## Soumettre comme « réutilisation » data.gouv.fr
-
-Voir [DATAGOUV.md](./DATAGOUV.md) pour le contenu prêt-à-coller (titre, description, tags, vignette).
 
 ## Contribuer
 
-Voir [CONTRIBUTING.md](./CONTRIBUTING.md). Quelques idées sur la roadmap :
+Voir [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-- [ ] Itinéraire turn-by-turn ([openrouteservice](https://openrouteservice.org/), clé gratuite)
-- [ ] Historique de disponibilité (snapshot horaire → tendances par station)
-- [ ] PWA / cache hors-ligne
-- [ ] Comparaison avec d'autres réseaux GBFS (Lime, Dott, Tier)
-- [ ] Auto-zoom + popup en mode "Près de moi" sur la station la plus proche
 
 ## Crédits
 
